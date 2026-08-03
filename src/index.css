@@ -55,13 +55,22 @@
    * trait de retour à l'accueil, sans le bandeau mort.
    */
   /**
-   * Hauteur minimale calée sur le viewport plein écran.
+   * Hauteur exacte du viewport plein écran. La page ne défile jamais.
    *
-   * Minimale et non fixe : un écran plus chargé peut défiler normalement, la
-   * barre du bas restant posée par `sticky`.
+   * `min-height` laissait la page grandir avec son contenu, et la barre du bas
+   * ne tenait que par `sticky`. Or sur iOS, un `sticky bottom-0` ne se recale
+   * que pendant un défilement actif : la barre revenait à sa place le doigt
+   * posé, et remontait dès qu'on relâchait, découvrant le fond en dessous.
+   *
+   * Hauteur fixe, et c'est la zone de contenu qui défile en interne. Il n'y a
+   * plus de défilement de page, donc plus rien à recaler : la barre est
+   * posée en bas de la coque, un point c'est tout.
+   *
+   * `100%` hérite du viewport plein écran fourni par `black-translucent`, sans
+   * dépendre des variations des unités `vh` dans Safari.
    */
   .app-shell {
-    min-height: 100%;
+    height: 100%;
   }
 
   /**
