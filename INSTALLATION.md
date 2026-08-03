@@ -7,7 +7,7 @@ Aucune connaissance technique n'est nécessaire, il suffit de suivre dans l'ordr
 
 ## 1. Tester sur le PC
 
-Ouvre un terminal dans le dossier `itmlemi` et lance :
+Ouvre un terminal dans le dossier `prepatrack` et lance :
 
 ```bash
 npm run dev
@@ -34,7 +34,7 @@ l'app sur l'écran d'accueil, et sans installation Safari efface les données au
 
 ### 2.2 Envoyer l'app
 
-Dans le terminal, toujours dans le dossier `itmlemi` :
+Dans le terminal, toujours dans le dossier `prepatrack` :
 
 ```bash
 npx vercel login
@@ -93,7 +93,7 @@ données : ton PC ne verra pas ta prod de la journée.
 3. Déclare le premier gestionnaire en ajoutant deux lignes à `.env.local` :
 
    ```
-   MANAGER_BADGE=6504109
+   MANAGER_BADGE=1234567
    MANAGER_NAME=Ton Nom
    ```
 
@@ -242,7 +242,7 @@ Si ça marche en mode avion, ça marchera dans l'entrepôt.
 
 ## Détail technique à corriger sur ton PC
 
-Ton fichier `C:\Users\FlowUP\.npmrc` contient la ligne `os = "linux"`. Elle fait croire à
+Si ton fichier `C:\Users\utilisateur\.npmrc` contient la ligne `os = "linux"`, elle fait croire à
 npm qu'il tourne sous Linux, et l'empêche d'installer certains composants réservés à
 Windows — c'est ce qui a fait échouer la première installation ici, et ça se reproduira
 sur tous tes projets JavaScript.

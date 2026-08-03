@@ -112,7 +112,7 @@ function SignInForm({ sync }: Props) {
           label="Numéro de badge"
           value={badge}
           onChange={(v) => setBadge(v.replace(/\D/g, ''))}
-          placeholder="6504109"
+          placeholder="1234567"
           inputMode="numeric"
         />
         <Field

@@ -1,8 +1,11 @@
 # PrepaTrack
 
-Suivi de production pour préparateur de commandes — base Bricomarché ITM LEMI.
+Suivi de production pour préparateur de commandes en entrepôt.
 Application web hors ligne, utilisée à une main sur iPhone pendant la vacation et
 consultée sur PC le soir.
+
+Distribué sous licence [GNU AGPL v3](LICENSE). Toute redistribution doit conserver
+l'attribution indiquée dans [NOTICE](NOTICE).
 
 **Installation : voir [INSTALLATION.md](INSTALLATION.md).**
 
@@ -129,7 +132,7 @@ protégé une donnée.
 
 Un préparateur s'identifie par son numéro de badge. Supabase authentifiant par
 e-mail, une adresse technique est fabriquée à partir du badge
-(`6504109@prepatrack.local`) ; ce domaine n'existe pas et ne reçoit jamais rien, le
+(`1234567@prepatrack.local`) ; ce domaine n'existe pas et ne reçoit jamais rien, le
 code personnel à 6 chiffres tient lieu de mot de passe.
 
 Un compte ne peut pas être créé librement : un déclencheur exige que le badge ait été

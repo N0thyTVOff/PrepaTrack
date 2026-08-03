@@ -214,7 +214,7 @@ try {
       `\n⚠ Aucun gestionnaire déclaré : personne ne pourra ajouter de préparateur.
   Ajoute ces deux lignes dans .env.local puis relance la commande :
 
-  MANAGER_BADGE=6504109
+  MANAGER_BADGE=1234567
   MANAGER_NAME=Ton Nom`,
     )
   } else {

@@ -5,7 +5,7 @@
 --
 -- Principe : Supabase authentifie par e-mail, or un préparateur s'identifie par
 -- son numéro de badge. On fabrique donc une adresse technique à partir du badge
--- (6504109 -> 6504109@prepatrack.local). Ce domaine n'existe pas et ne reçoit
+-- (1234567 -> 1234567@prepatrack.local). Ce domaine n'existe pas et ne reçoit
 -- jamais rien : aucun message n'est envoyé, le code personnel tient lieu de mot
 -- de passe.
 

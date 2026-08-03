@@ -15,7 +15,7 @@ beforeEach(async () => {
 
 describe('identifiants de connexion', () => {
   it('refuse un badge qui n’en est pas un', () => {
-    expect(validateBadge('6504109')).toBeUndefined()
+    expect(validateBadge('1234567')).toBeUndefined()
     expect(validateBadge('123')).toBeDefined()
     expect(validateBadge('65a4109')).toBeDefined()
     expect(validateBadge('')).toBeDefined()
@@ -31,8 +31,8 @@ describe('identifiants de connexion', () => {
   })
 
   it('fabrique une adresse technique à partir du badge', () => {
-    expect(badgeToEmail('6504109')).toBe('6504109@prepatrack.local')
-    expect(badgeToEmail(' 6504109 ')).toBe('6504109@prepatrack.local')
+    expect(badgeToEmail('1234567')).toBe('1234567@prepatrack.local')
+    expect(badgeToEmail(' 1234567 ')).toBe('1234567@prepatrack.local')
   })
 })
 
@@ -48,7 +48,7 @@ describe('cloisonnement des données', () => {
     await saveProfile({
       userId: 'moi',
       preparerId: 'p1',
-      badge: '6504109',
+      badge: '1234567',
       name: 'Moi',
       role: 'preparer',
     })
@@ -62,7 +62,7 @@ describe('cloisonnement des données', () => {
     await saveProfile({
       userId: 'moi',
       preparerId: 'p1',
-      badge: '6504109',
+      badge: '1234567',
       name: 'Moi',
       role: 'preparer',
     })
@@ -75,7 +75,7 @@ describe('cloisonnement des données', () => {
     await saveProfile({
       userId: 'moi',
       preparerId: 'p1',
-      badge: '6504109',
+      badge: '1234567',
       name: 'Moi',
       role: 'manager',
     })
@@ -104,7 +104,7 @@ describe('cloisonnement des données', () => {
     await saveProfile({
       userId: 'moi',
       preparerId: 'p1',
-      badge: '6504109',
+      badge: '1234567',
       name: 'Moi',
       role: 'manager',
     })
@@ -136,7 +136,7 @@ describe('rattachement des vacations d’avant la connexion', () => {
     await saveProfile({
       userId: 'moi',
       preparerId: 'p1',
-      badge: '6504109',
+      badge: '1234567',
       name: 'Anthony',
       role: 'manager',
     })
@@ -210,7 +210,7 @@ describe('rôle', () => {
     await saveProfile({
       userId: 'moi',
       preparerId: 'p1',
-      badge: '6504109',
+      badge: '1234567',
       name: 'Moi',
       role: 'manager',
     })
