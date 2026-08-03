@@ -78,13 +78,13 @@ export function HelpSection({ role }: Props) {
 
           <Block title="Un colis est en rupture">
             <p>
-              Pendant une commande, appuie sur <b>📦 Rupture de stock</b> et indique la
-              quantité manquante. La référence, l'emplacement, le libellé et la note sont
-              facultatifs.
+              Pendant la prépa, appuie sur <b>📦 +1 hors stock</b> à la place du bouton
+              <b> +1</b>. Le colis n'entre pas dans le total préparé et le total hors stock
+              augmente immédiatement, sans formulaire.
             </p>
             <p className="mt-1 text-slate-400">
-              Le signalement explique l'écart entre prévu et préparé. Il reste modifiable
-              dans le bilan et sera transmis au gestionnaire au retour du réseau.
+              Un mauvais appui peut être annulé pendant 10 secondes. Le total reste
+              modifiable dans le bilan et sera transmis au gestionnaire au retour du réseau.
             </p>
           </Block>
 

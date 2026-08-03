@@ -435,10 +435,6 @@ export async function colisEventsFor(workdayId: string): Promise<ColisEvent[]> {
 
 export interface StockShortageInput {
   quantity: number
-  reference?: string
-  location?: string
-  label?: string
-  note?: string
 }
 
 function cleanShortageInput(input: StockShortageInput): StockShortageInput {
@@ -446,14 +442,7 @@ function cleanShortageInput(input: StockShortageInput): StockShortageInput {
   if (!Number.isFinite(quantity) || quantity <= 0) {
     throw new Error('La quantité manquante doit être strictement positive.')
   }
-  const optional = (value?: string) => value?.trim() || undefined
-  return {
-    quantity,
-    reference: optional(input.reference),
-    location: optional(input.location),
-    label: optional(input.label),
-    note: optional(input.note),
-  }
+  return { quantity }
 }
 
 /** Signale une rupture uniquement lorsqu'une commande est réellement engagée. */
@@ -487,10 +476,6 @@ export async function updateStockShortage(
   if (!current || current.deletedAt) return
   const cleaned = cleanShortageInput({
     quantity: patch.quantity ?? current.quantity,
-    reference: patch.reference ?? current.reference,
-    location: patch.location ?? current.location,
-    label: patch.label ?? current.label,
-    note: patch.note ?? current.note,
   })
   await db.stockShortages.put(
     stamp({ ...current, ...cleaned, resolved: patch.resolved ?? current.resolved }),

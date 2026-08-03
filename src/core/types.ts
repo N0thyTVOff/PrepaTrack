@@ -163,10 +163,6 @@ export interface StockShortage extends Syncable {
   /** Heure du signalement, conservée indépendamment des corrections ultérieures. */
   at: number
   quantity: number
-  reference?: string
-  location?: string
-  label?: string
-  note?: string
   /** Suivi métier : la rupture reste dans l'historique une fois traitée. */
   resolved: boolean
 }

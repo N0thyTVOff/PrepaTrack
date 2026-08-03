@@ -152,9 +152,6 @@ export function DayReportScreen({ workdayId, onBack }: Props) {
             <div className="flex flex-col gap-2">
               {shortages.map((shortage) => {
                 const orderIndex = snap.orders.findIndex((order) => order.id === shortage.orderId)
-                const detail = [shortage.reference, shortage.location, shortage.label]
-                  .filter(Boolean)
-                  .join(' · ')
                 return (
                   <button
                     key={shortage.id}
@@ -170,8 +167,6 @@ export function DayReportScreen({ workdayId, onBack }: Props) {
                         {shortage.resolved ? 'Résolue' : 'À traiter'}
                       </span>
                     </div>
-                    {detail && <p className="mt-1 text-sm text-slate-300">{detail}</p>}
-                    {shortage.note && <p className="mt-1 text-sm text-slate-500">{shortage.note}</p>}
                     <p className="mt-1 text-xs text-slate-600">{hhmm(shortage.at)} · modifier</p>
                   </button>
                 )
@@ -232,7 +227,6 @@ export function DayReportScreen({ workdayId, onBack }: Props) {
       <CorrectSheet segment={editing} onClose={() => setEditing(undefined)} />
       <OrderEditSheet order={editingOrder} onClose={() => setEditingOrder(undefined)} />
       <StockShortageSheet
-        open={Boolean(editingShortage)}
         shortage={editingShortage}
         onClose={() => setEditingShortage(undefined)}
         onSave={async (input) => {

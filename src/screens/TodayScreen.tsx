@@ -40,7 +40,6 @@ import {
 } from '../db/undo'
 import { NewOrderSheet } from './NewOrderSheet'
 import { OrderEndSheet } from './OrderEndSheet'
-import { StockShortageSheet } from './StockShortageSheet'
 
 interface Props {
   session: Session
@@ -66,7 +65,6 @@ export function TodayScreen({ session, onShowReport, desktop }: Props) {
   const [confirmEnd, setConfirmEnd] = useState(false)
   const [confirmIncomplete, setConfirmIncomplete] = useState(false)
   const [undoNotice, setUndoNotice] = useState<UndoNotice>()
-  const [shortageOpen, setShortageOpen] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -278,17 +276,20 @@ export function TodayScreen({ session, onShowReport, desktop }: Props) {
         />
       )}
 
-      {view.inOrder && view.order && (
+      {showCounter && view.order && (
         <button
           type="button"
-          onClick={() => setShortageOpen(true)}
+          onClick={() =>
+            void runUndoable('1 colis hors stock', () =>
+              createStockShortage({ quantity: 1 }),
+            )
+          }
           className="pressable min-h-touch rounded-xl border border-warn/50 bg-warn/10 px-4 py-2 font-bold text-warn"
         >
-          📦 Rupture de stock
+          📦 +1 hors stock
           {shortageTotal(shortages, view.order.id) > 0 && (
             <span className="ml-2 text-sm">
-              ({shortageTotal(shortages, view.order.id)} colis signalé
-              {shortageTotal(shortages, view.order.id) > 1 ? 's' : ''})
+              · total {shortageTotal(shortages, view.order.id)}
             </span>
           )}
         </button>
@@ -353,13 +354,6 @@ export function TodayScreen({ session, onShowReport, desktop }: Props) {
               }
             : undefined
         }
-      />
-      <StockShortageSheet
-        open={shortageOpen && Boolean(view.inOrder && view.order)}
-        onClose={() => setShortageOpen(false)}
-        onSave={async (input) => {
-          await runWithoutUndo(() => createStockShortage(input))
-        }}
       />
       {confirmIncomplete && view.order && (
         <ConfirmDialog

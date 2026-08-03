@@ -43,46 +43,32 @@ describe('ruptures de stock', () => {
     expect(await db.stockShortages.count()).toBe(0)
   })
 
-  it('enregistre plusieurs ruptures structurées hors ligne', async () => {
+  it('compte plusieurs appuis hors stock sans augmenter les colis préparés', async () => {
     const order = await beginOrder()
-    const first = await createStockShortage(
-      {
-        quantity: 3,
-        reference: ' REF-42 ',
-        location: ' A-12 ',
-        label: ' Café ',
-        note: ' Palette vide ',
-      },
-      at(11),
-    )
-    await createStockShortage({ quantity: 2, reference: 'REF-99' }, at(12))
+    const first = await createStockShortage({ quantity: 1 }, at(11))
+    await createStockShortage({ quantity: 1 }, at(12))
 
     const rows = await stockShortagesFor(order!.workdayId)
     expect(rows).toHaveLength(2)
     expect(first).toMatchObject({
       orderId: order!.id,
-      quantity: 3,
-      reference: 'REF-42',
-      location: 'A-12',
-      label: 'Café',
-      note: 'Palette vide',
+      quantity: 1,
       resolved: false,
       syncState: 'pending',
     })
-    expect(shortageTotal(rows, order!.id)).toBe(5)
-    expect(unexplainedColis(100, 95, rows, order!.id)).toBe(0)
-    expect(unexplainedColis(100, 90, rows, order!.id)).toBe(5)
+    expect(shortageTotal(rows, order!.id)).toBe(2)
+    expect(unexplainedColis(100, 98, rows, order!.id)).toBe(0)
+    expect(unexplainedColis(100, 95, rows, order!.id)).toBe(3)
   })
 
   it('corrige, résout puis supprime logiquement sans perdre la synchronisation', async () => {
     const order = await beginOrder()
     const shortage = await createStockShortage({ quantity: 4 }, at(11))
 
-    await updateStockShortage(shortage!.id, { quantity: 6, reference: 'R-6' })
+    await updateStockShortage(shortage!.id, { quantity: 6 })
     await setStockShortageResolved(shortage!.id, true)
     expect(await db.stockShortages.get(shortage!.id)).toMatchObject({
       quantity: 6,
-      reference: 'R-6',
       resolved: true,
       syncState: 'pending',
     })
@@ -97,15 +83,12 @@ describe('ruptures de stock', () => {
 
   it('conserve le même identifiant dans l’aller-retour Supabase', async () => {
     await beginOrder()
-    const shortage = await createStockShortage(
-      { quantity: 7, reference: 'R7', location: 'B2' },
-      at(11),
-    )
+    const shortage = await createStockShortage({ quantity: 7 }, at(11))
     const table = SYNC_TABLES.find((candidate) => candidate.remote === 'stock_shortages')!
     const remote = table.toRow(shortage!)
     const returned = table.fromRow({ ...remote, user_id: 'owner-1' })
 
-    expect(remote).toMatchObject({ quantity: 7, reference: 'R7', location: 'B2' })
+    expect(remote).toMatchObject({ quantity: 7 })
     expect(returned).toMatchObject({
       id: shortage!.id,
       orderId: shortage!.orderId,

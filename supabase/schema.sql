@@ -80,10 +80,6 @@ create table if not exists public.stock_shortages (
   order_id text not null,
   at bigint not null,
   quantity integer not null check (quantity > 0),
-  reference text,
-  location text,
-  label text,
-  note text,
   resolved boolean not null default false,
   updated_at bigint not null,
   deleted_at bigint
