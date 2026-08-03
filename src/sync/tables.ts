@@ -1,6 +1,13 @@
 import type { Table } from 'dexie'
 import { db } from '../db/db'
-import type { ColisEvent, Order, Segment, SupportKind, Workday } from '../core/types'
+import type {
+  ColisEvent,
+  Order,
+  Segment,
+  StockShortage,
+  SupportKind,
+  Workday,
+} from '../core/types'
 import { EMPTY_SUPPORTS } from '../core/types'
 
 /**
@@ -195,10 +202,47 @@ const colisEvents: SyncTable<ColisEvent> = {
   }),
 }
 
+const stockShortages: SyncTable<StockShortage> = {
+  remote: 'stock_shortages',
+  table: () => db.stockShortages,
+  toRow: (shortage) => ({
+    id: shortage.id,
+    workday_id: shortage.workdayId,
+    order_id: shortage.orderId,
+    at: shortage.at,
+    quantity: shortage.quantity,
+    reference: shortage.reference ?? null,
+    location: shortage.location ?? null,
+    label: shortage.label ?? null,
+    note: shortage.note ?? null,
+    resolved: shortage.resolved,
+    updated_at: shortage.updatedAt,
+    deleted_at: shortage.deletedAt ?? null,
+    ...owner(shortage),
+  }),
+  fromRow: (row) => ({
+    id: String(row.id),
+    workdayId: String(row.workday_id),
+    orderId: String(row.order_id),
+    at: num(row.at),
+    quantity: num(row.quantity),
+    reference: undef(row.reference as string | null),
+    location: undef(row.location as string | null),
+    label: undef(row.label as string | null),
+    note: undef(row.note as string | null),
+    resolved: row.resolved === true,
+    updatedAt: num(row.updated_at),
+    deletedAt: optNum(row.deleted_at),
+    ownerId: undef(row.user_id as string | null),
+    syncState: 'synced',
+  }),
+}
+
 /** Ordre d'envoi : les journées avant ce qu'elles contiennent. */
 export const SYNC_TABLES: AnySyncTable[] = [
   define(workdays),
   define(orders),
   define(segments),
   define(colisEvents),
+  define(stockShortages),
 ]

@@ -155,6 +155,22 @@ export interface ColisEvent extends Syncable {
   delta: number
 }
 
+/** Un produit prévu mais indisponible pendant la préparation d'une commande. */
+export interface StockShortage extends Syncable {
+  id: string
+  workdayId: string
+  orderId: string
+  /** Heure du signalement, conservée indépendamment des corrections ultérieures. */
+  at: number
+  quantity: number
+  reference?: string
+  location?: string
+  label?: string
+  note?: string
+  /** Suivi métier : la rupture reste dans l'historique une fois traitée. */
+  resolved: boolean
+}
+
 export interface IncidentDef {
   /** Correspond à un SegmentType pour les trois types livrés, libre ensuite. */
   key: string

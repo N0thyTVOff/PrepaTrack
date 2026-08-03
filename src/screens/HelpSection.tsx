@@ -76,6 +76,18 @@ export function HelpSection({ role }: Props) {
             </p>
           </Block>
 
+          <Block title="Un colis est en rupture">
+            <p>
+              Pendant une commande, appuie sur <b>📦 Rupture de stock</b> et indique la
+              quantité manquante. La référence, l'emplacement, le libellé et la note sont
+              facultatifs.
+            </p>
+            <p className="mt-1 text-slate-400">
+              Le signalement explique l'écart entre prévu et préparé. Il reste modifiable
+              dans le bilan et sera transmis au gestionnaire au retour du réseau.
+            </p>
+          </Block>
+
           <Block title="Si tu oublies d'appuyer">
             <p>
               Ça arrive et ça se répare. Ouvre le bilan de la journée, puis le{' '}

@@ -17,15 +17,18 @@ import { useRecentDays } from '../hooks/useRecentDays'
 import {
   addColis,
   advanceOrder,
+  createStockShortage,
   endBriefing,
   endInterruption,
   finishDay,
   saveOrderResult,
+  shortageTotal,
   startCleanup,
   startDay,
   startInterruption,
   startOrder,
   toggleOvertime,
+  unexplainedColis,
 } from '../db/repo'
 import {
   clearUndoCheckpoint,
@@ -37,6 +40,7 @@ import {
 } from '../db/undo'
 import { NewOrderSheet } from './NewOrderSheet'
 import { OrderEndSheet } from './OrderEndSheet'
+import { StockShortageSheet } from './StockShortageSheet'
 
 interface Props {
   session: Session
@@ -55,13 +59,14 @@ interface Props {
  * sert à afficher le bilan du jour en continu.
  */
 export function TodayScreen({ session, onShowReport, desktop }: Props) {
-  const { view, snap, day, live: sessionLive, settings, now } = session
+  const { view, snap, day, live: sessionLive, shortages, settings, now } = session
   const { days: historyDays } = useRecentDays(365)
   const [newOrder, setNewOrder] = useState(false)
   const [orderEnd, setOrderEnd] = useState(false)
   const [confirmEnd, setConfirmEnd] = useState(false)
   const [confirmIncomplete, setConfirmIncomplete] = useState(false)
   const [undoNotice, setUndoNotice] = useState<UndoNotice>()
+  const [shortageOpen, setShortageOpen] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -152,7 +157,10 @@ export function TodayScreen({ session, onShowReport, desktop }: Props) {
         // toujours un oubli d'appui sur le compteur : on le signale avant, car
         // après la commande est close et le chiffre faux.
         const counted = live?.counted ?? 0
-        if (counted > 0 && counted !== view.order?.colisPlanned && !confirmIncomplete) {
+        const unexplained = view.order
+          ? unexplainedColis(view.order.colisPlanned, counted, shortages, view.order.id)
+          : 0
+        if (counted > 0 && unexplained > 0 && !confirmIncomplete) {
           return setConfirmIncomplete(true)
         }
         setConfirmIncomplete(false)
@@ -270,6 +278,22 @@ export function TodayScreen({ session, onShowReport, desktop }: Props) {
         />
       )}
 
+      {view.inOrder && view.order && (
+        <button
+          type="button"
+          onClick={() => setShortageOpen(true)}
+          className="pressable min-h-touch rounded-xl border border-warn/50 bg-warn/10 px-4 py-2 font-bold text-warn"
+        >
+          📦 Rupture de stock
+          {shortageTotal(shortages, view.order.id) > 0 && (
+            <span className="ml-2 text-sm">
+              ({shortageTotal(shortages, view.order.id)} colis signalé
+              {shortageTotal(shortages, view.order.id) > 1 ? 's' : ''})
+            </span>
+          )}
+        </button>
+      )}
+
       <BigButton
         label={primaryActionLabel(view)}
         tone={view.phase === 'interrupted' ? 'ok' : 'accent'}
@@ -330,10 +354,17 @@ export function TodayScreen({ session, onShowReport, desktop }: Props) {
             : undefined
         }
       />
+      <StockShortageSheet
+        open={shortageOpen && Boolean(view.inOrder && view.order)}
+        onClose={() => setShortageOpen(false)}
+        onSave={async (input) => {
+          await runWithoutUndo(() => createStockShortage(input))
+        }}
+      />
       {confirmIncomplete && view.order && (
         <ConfirmDialog
           title="Le compte ne tombe pas juste"
-          message={`Tu as compté ${live?.counted ?? 0} colis sur les ${view.order.colisPlanned} annoncés. Si tu as oublié d'appuyer sur le compteur, ferme cette fenêtre et rattrape le compte — après, la commande sera close.`}
+          message={`Tu as compté ${live?.counted ?? 0} colis sur les ${view.order.colisPlanned} annoncés${shortageTotal(shortages, view.order.id) > 0 ? `, dont ${shortageTotal(shortages, view.order.id)} signalé(s) en rupture` : ''}. Il reste ${unexplainedColis(view.order.colisPlanned, live?.counted ?? 0, shortages, view.order.id)} colis sans explication. Si tu as oublié d'appuyer sur le compteur, ferme cette fenêtre et rattrape le compte.`}
           confirmLabel="C'est normal, terminer"
           onCancel={() => setConfirmIncomplete(false)}
           onConfirm={async () => {
