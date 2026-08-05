@@ -10,6 +10,7 @@ import { useSession } from './hooks/useSession'
 import { useResumePrompt } from './hooks/useResumePrompt'
 import { useSync } from './hooks/useSync'
 import { useRecording } from './hooks/useRecording'
+import { useLiveActivity } from './hooks/useLiveActivity'
 import { formatShort, hhmm } from './core/time'
 import { DashboardScreen } from './screens/DashboardScreen'
 import { DayReportScreen } from './screens/DayReportScreen'
@@ -47,6 +48,7 @@ export default function App() {
     session.settings.recording.enabled,
     session.settings.recording.retentionDays,
   )
+  useLiveActivity(session, recording.status)
   const sync = useSync()
   const isDesktop = useMediaQuery(DESKTOP_QUERY)
   // Sur grand écran on arrive sur les statistiques : le PC sert à consulter le
