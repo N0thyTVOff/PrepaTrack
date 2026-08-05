@@ -130,6 +130,11 @@ export default function App() {
             setReportSegmentId(undefined)
             if (session.snap.workday) setReportId(session.snap.workday.id)
           }}
+          onBeforeFinishDay={() =>
+            recording.status === 'recording'
+              ? recording.stop('complete')
+              : Promise.resolve()
+          }
         />
       )}
 
