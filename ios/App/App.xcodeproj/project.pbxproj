@@ -18,6 +18,7 @@
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
 		AA0000010000000000000001 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000001 /* ViewController.swift */; };
 		AA0000010000000000000002 /* LiveActivityPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000002 /* LiveActivityPlugin.swift */; };
+		AB0000010000000000000001 /* RecordingPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000020000000000000001 /* RecordingPlugin.swift */; };
 		AA0000010000000000000003 /* PrepaTrackActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000003 /* PrepaTrackActivityAttributes.swift */; };
 		AA0000010000000000000004 /* PrepaTrackLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000004 /* PrepaTrackLiveActivity.swift */; };
 		AA0000010000000000000005 /* PrepaTrackLiveActivityBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000020000000000000005 /* PrepaTrackLiveActivityBundle.swift */; };
@@ -55,6 +56,7 @@
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		AA0000020000000000000001 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		AA0000020000000000000002 /* LiveActivityPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityPlugin.swift; sourceTree = "<group>"; };
+		AB0000020000000000000001 /* RecordingPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingPlugin.swift; sourceTree = "<group>"; };
 		AA0000020000000000000003 /* PrepaTrackActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrepaTrackActivityAttributes.swift; sourceTree = "<group>"; };
 		AA0000020000000000000004 /* PrepaTrackLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrepaTrackLiveActivity.swift; sourceTree = "<group>"; };
 		AA0000020000000000000005 /* PrepaTrackLiveActivityBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrepaTrackLiveActivityBundle.swift; sourceTree = "<group>"; };
@@ -101,6 +103,7 @@
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
 				AA0000020000000000000001 /* ViewController.swift */,
 				AA0000020000000000000002 /* LiveActivityPlugin.swift */,
+				AB0000020000000000000001 /* RecordingPlugin.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -225,6 +228,7 @@
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
 				AA0000010000000000000001 /* ViewController.swift in Sources */,
 				AA0000010000000000000002 /* LiveActivityPlugin.swift in Sources */,
+				AB0000010000000000000001 /* RecordingPlugin.swift in Sources */,
 				AA0000010000000000000003 /* PrepaTrackActivityAttributes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
