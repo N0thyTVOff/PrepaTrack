@@ -890,6 +890,9 @@ export async function deleteWorkday(workdayId: string): Promise<void> {
       await db.stockShortages.where('workdayId').equals(workdayId).modify(mark)
     },
   )
+  // `mark` n'utilise volontairement pas `stamp` dans la transaction. Recopie
+  // donc explicitement les tombstones dans le miroir natif après le commit.
+  scheduleDurableBackup()
 }
 
 /** Les vacations du compte courant. */

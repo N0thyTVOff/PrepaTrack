@@ -18,19 +18,22 @@ export async function recoverOrphanedWorkdays(): Promise<number> {
 
   let recovered = 0
   for (const [workdayId, rows] of byDay) {
-    if (await db.workdays.get(workdayId)) continue
+    const existing = await db.workdays.get(workdayId)
+    if (existing && !existing.deletedAt) continue
     rows.sort((a, b) => a.startedAt - b.startedAt)
     const open = rows.some((row) => row.endedAt === undefined)
     const ended = rows.flatMap((row) => row.endedAt === undefined ? [] : [row.endedAt])
     const workday: Workday = {
+      ...existing,
       id: workdayId,
       date: dayKey(rows[0].startedAt),
       status: open ? 'open' : 'closed',
       startedAt: rows[0].startedAt,
       endedAt: open || ended.length === 0 ? undefined : Math.max(...ended),
-      ownerId: rows.find((row) => row.ownerId)?.ownerId,
+      ownerId: existing?.ownerId ?? rows.find((row) => row.ownerId)?.ownerId,
       updatedAt: Date.now(),
       syncState: 'pending',
+      deletedAt: undefined,
       notes: 'Vacation reconstruite automatiquement depuis la timeline locale.',
     }
     await db.workdays.put(workday)
