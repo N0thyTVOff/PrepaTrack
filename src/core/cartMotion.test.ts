@@ -62,6 +62,24 @@ describe('classification immobile / déplacement', () => {
     expect(detector.current()).toBe('stationary')
   })
 
+  it('ferme le trajet malgré les vibrations résiduelles du chariot immobile', () => {
+    const detector = new CartMotionDetector(0.5, 500, 1_000)
+    const transitions: string[] = []
+
+    for (let at = 0; at <= 2_000; at += 100) {
+      const transition = detector.push(at, 0.9)
+      if (transition) transitions.push(transition)
+    }
+    // 0,4 est sous le seuil calibré (0,5), mais au-dessus de l'ancien seuil de
+    // sortie (0,325) qui laissait le trajet ouvert indéfiniment.
+    for (let at = 2_100; at <= 4_500; at += 100) {
+      const transition = detector.push(at, 0.4)
+      if (transition) transitions.push(transition)
+    }
+
+    expect(transitions).toEqual(['moving', 'stationary'])
+  })
+
   it('peut fermer un trajet lorsque iOS ne transmet plus aucun échantillon', () => {
     const detector = new CartMotionDetector(0.5, 500, 1_000)
     for (let at = 0; at <= 2_000; at += 100) detector.push(at, 0.9)
