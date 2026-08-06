@@ -21,6 +21,21 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
     private var currentURL: URL?
     private var stopCalls: [CAPPluginCall] = []
 
+    public override func load() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+    }
+
+    @objc private func applicationDidEnterBackground() {
+        sessionQueue.async {
+            if self.movieOutput.isRecording { self.movieOutput.stopRecording() }
+        }
+    }
+
     @objc func start(_ call: CAPPluginCall) {
         requestPermissions { [weak self] granted in
             guard let self else { return }
@@ -59,6 +74,12 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
     @objc func stop(_ call: CAPPluginCall) {
         sessionQueue.async {
             guard self.movieOutput.isRecording else {
+                if self.currentURL != nil {
+                    // Le fichier est déjà arrêté mais Photos termine encore son
+                    // import : la clôture doit attendre le même accusé final.
+                    self.stopCalls.append(call)
+                    return
+                }
                 DispatchQueue.main.async { call.resolve(["saved": false]) }
                 return
             }
@@ -108,7 +129,8 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
             self.stopCalls.removeAll()
             DispatchQueue.main.async {
                 UIApplication.shared.isIdleTimerDisabled = false
-                let payload: [String: Any] = ["saved": saved, "error": error as Any]
+                var payload: [String: Any] = ["saved": saved]
+                if let error { payload["error"] = error }
                 calls.forEach { saved ? $0.resolve(payload) : $0.reject(error ?? "La vidéo n’a pas pu être ajoutée à Photos.") }
                 self.notifyListeners("recordingFinished", data: payload)
             }

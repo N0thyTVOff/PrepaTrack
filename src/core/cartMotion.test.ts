@@ -61,6 +61,14 @@ describe('classification immobile / déplacement', () => {
     expect(transitions).toEqual(['moving', 'stationary'])
     expect(detector.current()).toBe('stationary')
   })
+
+  it('peut fermer un trajet lorsque iOS ne transmet plus aucun échantillon', () => {
+    const detector = new CartMotionDetector(0.5, 500, 1_000)
+    for (let at = 0; at <= 2_000; at += 100) detector.push(at, 0.9)
+    expect(detector.current()).toBe('moving')
+    expect(detector.forceStationary()).toBe('stationary')
+    expect(detector.current()).toBe('stationary')
+  })
 })
 
 describe('calibration', () => {

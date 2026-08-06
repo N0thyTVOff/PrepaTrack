@@ -61,6 +61,7 @@ export function useCartMotion(session: Session): CartMotionControl {
   const detector = useRef<CartMotionDetector>()
   const calibration = useRef<CalibrationRun>()
   const transitionQueue = useRef(Promise.resolve())
+  const lastMotionSampleAt = useRef(0)
   const enabled = session.settings.cartMotion.enabled
   const threshold = session.settings.cartMotion.threshold
 
@@ -104,6 +105,7 @@ export function useCartMotion(session: Session): CartMotionControl {
 
     const onMotion = (event: DeviceMotionEvent) => {
       permissionGranted.current = true
+      lastMotionSampleAt.current = Date.now()
       const sample = fromDeviceMotion(event)
       const run = calibration.current
       if (run) {
@@ -131,6 +133,18 @@ export function useCartMotion(session: Session): CartMotionControl {
     window.addEventListener('devicemotion', onMotion)
     return () => window.removeEventListener('devicemotion', onMotion)
   }, [enabled, session.loading, status, supported, threshold])
+
+  useEffect(() => {
+    if (!enabled || status !== 'moving') return
+    const watchdog = window.setInterval(() => {
+      // iOS peut cesser d'émettre `devicemotion` lorsque le téléphone devient
+      // parfaitement immobile. Sans cette garde, le dernier trajet restait
+      // alors ouvert indéfiniment.
+      if (Date.now() - lastMotionSampleAt.current < 4_500) return
+      if (detector.current?.forceStationary()) setStatus('stationary')
+    }, 1_000)
+    return () => window.clearInterval(watchdog)
+  }, [enabled, status])
 
   const requestPermission = useCallback(async () => {
     if (!supported) return false

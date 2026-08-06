@@ -17,6 +17,7 @@ import {
 } from '../db/recordings'
 import {
   nativeRecordingSupported,
+  nativeRecordingStatus,
   onNativeRecordingFinished,
   startNativeRecording,
   stopNativeRecording,
@@ -270,6 +271,22 @@ export function useRecording(
   }, [status, stop, workdayId])
 
   useEffect(() => {
+    if (native) {
+      const reconcile = () => {
+        if (document.visibilityState !== 'visible') return
+        void nativeRecordingStatus().then((value) => {
+          if (value.recording) {
+            setStartedAt(value.startedAt)
+            setStatus('recording')
+          } else {
+            setStartedAt(undefined)
+            setStatus(enabled ? 'idle' : 'disabled')
+          }
+        })
+      }
+      document.addEventListener('visibilitychange', reconcile)
+      return () => document.removeEventListener('visibilitychange', reconcile)
+    }
     const interrupt = () => void stop('interrupted')
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') interrupt()
@@ -280,7 +297,7 @@ export function useRecording(
       window.removeEventListener('pagehide', interrupt)
       document.removeEventListener('visibilitychange', onVisibility)
     }
-  }, [stop])
+  }, [enabled, native, stop])
 
   return { status, startedAt, message, supported, canStart: Boolean(workdayId), start, stop, testDevices }
 }

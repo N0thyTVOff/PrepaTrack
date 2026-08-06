@@ -25,6 +25,7 @@ import type {
   Workday,
 } from '../core/types'
 import { EMPTY_SUPPORTS } from '../core/types'
+import { scheduleDurableBackup } from '../native/durableStorage'
 
 /**
  * Toutes les écritures passent par ici. Chaque transition ferme le segment
@@ -44,6 +45,7 @@ function stamp<T extends { updatedAt: number; syncState: 'pending' | 'synced'; o
   // Posé une seule fois, à la création. Un gestionnaire qui corrige la journée
   // d'un préparateur ne doit pas se l'attribuer au passage.
   if (o.ownerId === undefined) o.ownerId = currentOwnerId()
+  scheduleDurableBackup()
   return o
 }
 

@@ -72,7 +72,11 @@ export class CartMotionDetector {
     if (this.samples.length < MIN_WINDOW_SAMPLES) return undefined
 
     const rms = rootMeanSquare(this.samples.map((sample) => sample.energy))
-    const next: CartMotionTransition = rms >= this.threshold ? 'moving' : 'stationary'
+    // Une fois en mouvement, le seuil de sortie est volontairement plus bas :
+    // il évite les oscillations tout en laissant les vibrations résiduelles du
+    // chariot immobile retomber franchement vers « stationary ».
+    const activeThreshold = this.state === 'moving' ? this.threshold * 0.65 : this.threshold
+    const next: CartMotionTransition = rms >= activeThreshold ? 'moving' : 'stationary'
     if (next === this.state) {
       this.candidate = undefined
       this.candidateSince = undefined
@@ -96,6 +100,15 @@ export class CartMotionDetector {
 
   current(): CartMotionTransition {
     return this.state
+  }
+
+  forceStationary(): CartMotionTransition | undefined {
+    this.samples.length = 0
+    this.candidate = undefined
+    this.candidateSince = undefined
+    if (this.state === 'stationary') return undefined
+    this.state = 'stationary'
+    return 'stationary'
   }
 }
 
