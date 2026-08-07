@@ -14,6 +14,7 @@ import type { OrderPallet, StockShortage, SupportKind } from '../core/types'
 import {
   deleteStockShortage,
   deleteWorkday,
+  reconcileWorkdayBounds,
   setStockShortageResolved,
   updateStockShortage,
   updateOrderPallet,
@@ -58,6 +59,10 @@ export function DayReportScreen({ workdayId, initialSegmentId, onBack }: Props) 
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editingShortage, setEditingShortage] = useState<StockShortage | undefined>()
   const [editingPallet, setEditingPallet] = useState<OrderPallet | undefined>()
+
+  useEffect(() => {
+    void reconcileWorkdayBounds(workdayId)
+  }, [workdayId])
 
   useEffect(() => {
     if (!initialSegmentId || !snap) return
