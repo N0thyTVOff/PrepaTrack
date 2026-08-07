@@ -1,4 +1,5 @@
 import AVFoundation
+import AVFAudio
 import Capacitor
 import Photos
 
@@ -60,6 +61,8 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
             self.sessionQueue.async {
                 do {
                     try self.configureIfNeeded()
+                    let audioChannels = try self.configureAudioSession()
+                    self.configureAudioOutput(channels: audioChannels)
                     guard !self.movieOutput.isRecording else {
                         DispatchQueue.main.async {
                             call.resolve(["startedAt": (self.startedAt ?? Date()).timeIntervalSince1970 * 1_000])
@@ -140,6 +143,7 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
     private func finish(saved: Bool, error: String?, sourceURL: URL?) {
         sessionQueue.async {
             self.captureSession.stopRunning()
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
             if saved, let url = sourceURL { try? FileManager.default.removeItem(at: url) }
             self.currentURL = nil
             self.startedAt = nil
@@ -214,6 +218,7 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
         guard !configured else { return }
         captureSession.beginConfiguration()
         defer { captureSession.commitConfiguration() }
+        captureSession.automaticallyConfiguresApplicationAudioSession = false
         captureSession.sessionPreset = .hd1280x720
         guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front),
               let microphone = AVCaptureDevice.default(for: .audio) else {
@@ -276,6 +281,46 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
             }
         }
         configured = true
+    }
+
+    /**
+     * Utilise le traitement audio prévu par Apple pour une captation vidéo,
+     * le micro dirigé vers la caméra avant et le stéréo lorsqu'il existe.
+     */
+    private func configureAudioSession() throws -> Int {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.record, mode: .videoRecording, options: [])
+        try? session.setPreferredSampleRate(48_000)
+        try session.setActive(true)
+
+        if let builtIn = session.availableInputs?.first(where: { $0.portType == .builtInMic }) {
+            try? session.setPreferredInput(builtIn)
+            if let front = builtIn.dataSources?.first(where: { $0.orientation == .front }) {
+                if front.supportedPolarPatterns?.contains(.stereo) == true {
+                    try? front.setPreferredPolarPattern(.stereo)
+                }
+                try? builtIn.setPreferredDataSource(front)
+            }
+        }
+        if session.inputNumberOfChannels >= 2 {
+            try? session.setPreferredInputOrientation(.portrait)
+        }
+        return max(1, min(2, session.inputNumberOfChannels))
+    }
+
+    /** Encode le son en AAC 48 kHz avec le débit maximal utile à 1 ou 2 canaux. */
+    private func configureAudioOutput(channels: Int) {
+        guard let connection = movieOutput.connection(with: .audio) else { return }
+        let supported = Set(movieOutput.supportedOutputSettingsKeys(for: connection))
+        let candidates: [String: Any] = [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVSampleRateKey: 48_000,
+            AVNumberOfChannelsKey: channels,
+            AVEncoderBitRateKey: channels >= 2 ? 256_000 : 160_000,
+            AVEncoderAudioQualityKey: AVAudioQuality.max.rawValue,
+        ]
+        let settings = candidates.filter { supported.contains($0.key) }
+        if !settings.isEmpty { movieOutput.setOutputSettings(settings, for: connection) }
     }
 
     private func requestPermissions(completion: @escaping (Bool) -> Void) {
