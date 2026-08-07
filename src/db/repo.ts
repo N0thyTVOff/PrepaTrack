@@ -637,6 +637,18 @@ export async function endInterruption(at: number = Date.now()): Promise<void> {
 export const AUTOMATIC_TRAVEL_NOTE = 'Détection automatique du chariot'
 
 /**
+ * Une action de prélèvement constitue une preuve métier que le chariot est
+ * arrivé. Elle ferme en dernier recours un trajet automatique que les capteurs
+ * n'auraient pas encore classé immobile.
+ */
+async function settleAutomaticTravelOnWorkAction(at: number): Promise<void> {
+  const view = deriveView(await loadSnapshot())
+  if (view.active?.type === 'travel' && view.active.note === AUTOMATIC_TRAVEL_NOTE) {
+    await endInterruption(at)
+  }
+}
+
+/**
  * Bascule un trajet détecté par les capteurs. L'automate n'agit que pendant le
  * prélèvement et ne ferme que les trajets qu'il a lui-même ouverts : une pause,
  * un aléa ou un trajet manuel reste toujours sous le contrôle de l'utilisateur.
@@ -677,6 +689,7 @@ export async function setAutomaticTravel(
 // --- Progression -----------------------------------------------------------
 
 export async function addColis(delta: number, at: number = Date.now()): Promise<void> {
+  await settleAutomaticTravelOnWorkAction(at)
   const snap = await loadSnapshot()
   const view = deriveView(snap)
   if (!snap.workday || !view.order) return
@@ -721,6 +734,7 @@ export async function createStockShortage(
   input: StockShortageInput,
   at: number = Date.now(),
 ): Promise<StockShortage | undefined> {
+  await settleAutomaticTravelOnWorkAction(at)
   const snap = await loadSnapshot()
   const view = deriveView(snap)
   if (!snap.workday || !view.inOrder || !view.order) return undefined

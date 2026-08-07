@@ -315,6 +315,20 @@ describe('interruptions', () => {
     expect(deriveView(await loadSnapshot()).active?.type).toBe('travel')
   })
 
+  it('considère le prochain colis comme une confirmation d’arrivée', async () => {
+    await startDay(at(0))
+    await endBriefing(at(10))
+    await startOrder({ colisPlanned: 60, linesCount: 20, orderType: 'normale' }, at(15))
+    await advanceOrder(at(20))
+    await setAutomaticTravel(true, at(25))
+
+    await addColis(1, at(30))
+
+    const view = deriveView(await loadSnapshot())
+    expect(view.active?.type).toBe('picking')
+    expect(await db.colisEvents.count()).toBe(1)
+  })
+
   it('reprend en attente si l’interruption n’a rien suspendu', async () => {
     await startDay(at(0))
     await endBriefing(at(10))

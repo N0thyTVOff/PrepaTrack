@@ -87,6 +87,33 @@ describe('classification immobile / déplacement', () => {
     expect(detector.forceStationary()).toBe('stationary')
     expect(detector.current()).toBe('stationary')
   })
+
+  it('termine un arrêt candidat avec une horloge indépendante des capteurs', () => {
+    const detector = new CartMotionDetector(0.5, 500, 1_000)
+    for (let at = 0; at <= 2_000; at += 100) detector.push(at, 0.9)
+    expect(detector.current()).toBe('moving')
+
+    // iOS ne fournit plus qu'une mesure calme puis espace ses événements.
+    detector.push(2_100, 0.05)
+    expect(detector.tick(3_200)).toBe('stationary')
+  })
+
+  it('ignore les chocs isolés pendant la confirmation de l’arrêt', () => {
+    const detector = new CartMotionDetector(0.5, 500, 1_000)
+    for (let at = 0; at <= 2_000; at += 100) detector.push(at, 0.9)
+    for (let at = 2_100; at <= 2_700; at += 100) detector.push(at, 0.08)
+    detector.push(2_800, 0.7)
+    for (let at = 2_900; at <= 3_500; at += 100) detector.push(at, 0.08)
+
+    expect(detector.current()).toBe('stationary')
+  })
+
+  it('ne termine jamais un trajet dont les vibrations roulantes continuent', () => {
+    const detector = new CartMotionDetector(0.5, 500, 1_000)
+    for (let at = 0; at <= 8_000; at += 100) detector.push(at, 0.9)
+    expect(detector.tick(8_100)).toBeUndefined()
+    expect(detector.current()).toBe('moving')
+  })
 })
 
 describe('calibration', () => {
