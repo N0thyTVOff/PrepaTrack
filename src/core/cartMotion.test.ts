@@ -1,10 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import {
+  AutomaticTravelGuard,
   calibrationThreshold,
   CartMotionDetector,
   MotionEnergyMeter,
   rootMeanSquare,
 } from './cartMotion'
+
+describe('priorité à l’arrêt manuel', () => {
+  it('ne réouvre pas le trajet avant un arrêt puis un nouveau départ', () => {
+    const guard = new AutomaticTravelGuard()
+    expect(guard.desiredMoving('moving', false)).toBe(true)
+    expect(guard.desiredMoving('moving', true)).toBe(true)
+
+    // Le trajet vient d'être fermé alors que le capteur voit encore du mouvement.
+    expect(guard.desiredMoving('moving', false)).toBe(false)
+    expect(guard.desiredMoving('moving', false)).toBe(false)
+
+    expect(guard.desiredMoving('stationary', false)).toBe(false)
+    expect(guard.desiredMoving('moving', false)).toBe(true)
+  })
+})
 
 describe('énergie de mouvement du chariot', () => {
   it('calcule une intensité indépendante de l’orientation', () => {

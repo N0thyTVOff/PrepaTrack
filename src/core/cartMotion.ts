@@ -52,6 +52,24 @@ export class MotionEnergyMeter {
 export type CartMotionTransition = 'moving' | 'stationary'
 
 /**
+ * Empêche les vibrations résiduelles de rouvrir un trajet que l'utilisateur
+ * vient de fermer. Le réarmement exige d'abord un véritable état immobile.
+ */
+export class AutomaticTravelGuard {
+  private travelWasOpen = false
+  private suppressedUntilStationary = false
+
+  desiredMoving(physical: CartMotionTransition, travelOpen: boolean): boolean {
+    if (this.travelWasOpen && !travelOpen && physical === 'moving') {
+      this.suppressedUntilStationary = true
+    }
+    if (physical === 'stationary') this.suppressedUntilStationary = false
+    this.travelWasOpen = travelOpen
+    return physical === 'moving' && !this.suppressedUntilStationary
+  }
+}
+
+/**
  * Classe les vibrations par fenêtres et exige une durée continue avant chaque
  * bascule. Un choc de palette ou un téléphone touché une fois ne peut donc pas
  * ouvrir un trajet.
