@@ -237,6 +237,18 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
             if camera.isGeometricDistortionCorrectionSupported {
                 camera.isGeometricDistortionCorrectionEnabled = true
             }
+            // Une cadence fixe donne à la stabilisation cinématique une
+            // fenêtre temporelle régulière, particulièrement importante sur
+            // un chariot qui vibre. On garde 30 i/s pour limiter le flou de
+            // mouvement sans augmenter la définition ni la taille du fichier.
+            let preferredFPS = 30.0
+            if camera.activeFormat.videoSupportedFrameRateRanges.contains(where: {
+                $0.minFrameRate <= preferredFPS && $0.maxFrameRate >= preferredFPS
+            }) {
+                let duration = CMTime(value: 1, timescale: 30)
+                camera.activeVideoMinFrameDuration = duration
+                camera.activeVideoMaxFrameDuration = duration
+            }
             camera.unlockForConfiguration()
         } catch {
             // Le réglage par défaut reste utilisable si iOS réserve brièvement
@@ -245,10 +257,22 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
         if let connection = movieOutput.connection(with: .video) {
             if connection.isVideoOrientationSupported { connection.videoOrientation = .portrait }
             if connection.isVideoStabilizationSupported {
-                // `auto` laisse AVFoundation choisir le meilleur compromis
-                // stabilisation/champ de vision pour le format 720p réellement
-                // disponible sur cet appareil.
-                connection.preferredVideoStabilizationMode = .auto
+                let format = camera.activeFormat
+                if #available(iOS 18.0, *),
+                   format.isVideoStabilizationModeSupported(.cinematicExtendedEnhanced) {
+                    // Mode recommandé par Apple pour la meilleure stabilité.
+                    // Il recadre davantage, mais le zoom optique reste à son
+                    // minimum afin de conserver tout le champ encore disponible.
+                    connection.preferredVideoStabilizationMode = .cinematicExtendedEnhanced
+                } else if format.isVideoStabilizationModeSupported(.cinematicExtended) {
+                    connection.preferredVideoStabilizationMode = .cinematicExtended
+                } else if format.isVideoStabilizationModeSupported(.cinematic) {
+                    connection.preferredVideoStabilizationMode = .cinematic
+                } else if format.isVideoStabilizationModeSupported(.standard) {
+                    connection.preferredVideoStabilizationMode = .standard
+                } else {
+                    connection.preferredVideoStabilizationMode = .auto
+                }
             }
         }
         configured = true
