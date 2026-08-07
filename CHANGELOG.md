@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.6.0](https://github.com/N0thyTVOff/PrepaTrack/compare/v0.5.2...v0.6.0) (2026-08-07)
+
+
+### Fonctionnalités
+
+* **incidents:** ajouter les aléas étiquette, consommables et réapprovisionnement ([254d14d](https://github.com/N0thyTVOff/PrepaTrack/commit/254d14d9101cd9cddc112d1b6fc9fec538985344))
+* **ios:** rendre PrepaTrack installable nativement sur iPhone via TestFlight ([d961262](https://github.com/N0thyTVOff/PrepaTrack/commit/d96126220fbdd2cda5fd06f75ba9a9614260f0e2))
+* **ios:** suivre la vacation depuis l’écran verrouillé et la Dynamic Island ([52fdd7f](https://github.com/N0thyTVOff/PrepaTrack/commit/52fdd7f6c3b2a66c703c86b560a121029610d91a))
+* **motion:** automatiser tous les trajets pendant la vacation ([56877f4](https://github.com/N0thyTVOff/PrepaTrack/commit/56877f4587e4e3020e67dcb7e4caebae985cb284))
+
+
+### Corrections
+
+* **auth:** conserver et renouveler atomiquement la connexion Supabase ([52fdd7f](https://github.com/N0thyTVOff/PrepaTrack/commit/52fdd7f6c3b2a66c703c86b560a121029610d91a))
+* **data:** protéger les journées et sauvegardes contre les coupures, crashs et mises à jour ([52fdd7f](https://github.com/N0thyTVOff/PrepaTrack/commit/52fdd7f6c3b2a66c703c86b560a121029610d91a))
+* **data:** restaurer les vacations supprimées par erreur ([52fdd7f](https://github.com/N0thyTVOff/PrepaTrack/commit/52fdd7f6c3b2a66c703c86b560a121029610d91a))
+* **ios:** enregistrer et finaliser durablement les vidéos dans Photos ([52fdd7f](https://github.com/N0thyTVOff/PrepaTrack/commit/52fdd7f6c3b2a66c703c86b560a121029610d91a))
+* **ios:** renforcer la stabilisation vidéo et la qualité du microphone ([52fdd7f](https://github.com/N0thyTVOff/PrepaTrack/commit/52fdd7f6c3b2a66c703c86b560a121029610d91a))
+* **ios:** supprimer la bande vide sous la navigation de l'application iPhone ([274b12e](https://github.com/N0thyTVOff/PrepaTrack/commit/274b12e2c9b571e6807e086d18f2d30f18a55f3b))
+* **ios:** utiliser la signature App Store ([#93](https://github.com/N0thyTVOff/PrepaTrack/issues/93)) ([9b32c76](https://github.com/N0thyTVOff/PrepaTrack/commit/9b32c76f3659cc7d3c374f2727285a53e9666a62))
+* **motion:** empêcher le redémarrage automatique après un arrêt manuel ([52fdd7f](https://github.com/N0thyTVOff/PrepaTrack/commit/52fdd7f6c3b2a66c703c86b560a121029610d91a))
+* **motion:** fiabiliser la fin automatique des trajets ([52fdd7f](https://github.com/N0thyTVOff/PrepaTrack/commit/52fdd7f6c3b2a66c703c86b560a121029610d91a))
+* **recording:** sauvegarder puis reprendre la vidéo après le verrouillage iOS ([6e72776](https://github.com/N0thyTVOff/PrepaTrack/commit/6e72776bd3fa9ab8224d2c58be9ffe13290829f4))
+* **stats:** appliquer les horaires corrigés dans toutes les statistiques ([52fdd7f](https://github.com/N0thyTVOff/PrepaTrack/commit/52fdd7f6c3b2a66c703c86b560a121029610d91a))
+
 ## [0.5.2](https://github.com/N0thyTVOff/PrepaTrack/compare/v0.5.1...v0.5.2) (2026-08-05)
 
 
