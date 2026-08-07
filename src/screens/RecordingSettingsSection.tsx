@@ -43,7 +43,7 @@ export function RecordingSettingsSection({ settings, recording }: { settings: Se
             </select>
           </label>
           <p className="mt-2 text-xs text-slate-500">
-            Qualité équilibrée 720p : environ {estimatedRecordingMegabytes(7.5)} Mo pour 7 h 30, en fichiers d’une heure maximum. Sur iPhone, chaque fichier terminé est ajouté directement à Photos. Les vidéos sont exclues de Supabase et des sauvegardes JSON.
+            Qualité équilibrée 720p : environ {estimatedRecordingMegabytes(7.5)} Mo pour 7 h 30, en fichiers d’une heure maximum. Sur iPhone, le champ de vision avant maximal et la stabilisation compatible sont activés. Chaque fichier reste dans le stockage durable jusqu’à ce que Photos confirme son import, puis il est récupéré automatiquement après une interruption. Les vidéos sont exclues de Supabase et des sauvegardes JSON.
           </p>
           <button
             type="button"

@@ -28,6 +28,20 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
             name: UIApplication.didEnterBackgroundNotification,
             object: nil
         )
+        recoverPendingRecordings()
+    }
+
+    private var recordingsDirectory: URL {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let directory = base
+            .appendingPathComponent("PrepaTrack", isDirectory: true)
+            .appendingPathComponent("Recordings", isDirectory: true)
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        var mutable = directory
+        try? mutable.setResourceValues(values)
+        return directory
     }
 
     @objc private func applicationDidEnterBackground() {
@@ -53,12 +67,14 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
                         return
                     }
                     if !self.captureSession.isRunning { self.captureSession.startRunning() }
-                    let url = FileManager.default.temporaryDirectory
+                    let url = self.recordingsDirectory
                         .appendingPathComponent("prepatrack-\(UUID().uuidString).mov")
                     self.currentURL = url
                     self.startedAt = Date()
                     self.movieOutput.maxRecordedDuration = CMTime(seconds: 3_600, preferredTimescale: 600)
-                    self.movieOutput.movieFragmentInterval = CMTime(seconds: 10, preferredTimescale: 600)
+                    // Un fragment court rend le MOV relisible après une coupure
+                    // brutale, avec au pire quelques secondes non finalisées.
+                    self.movieOutput.movieFragmentInterval = CMTime(seconds: 5, preferredTimescale: 600)
                     self.movieOutput.startRecording(to: url, recordingDelegate: self)
                     DispatchQueue.main.async {
                         UIApplication.shared.isIdleTimerDisabled = true
@@ -108,21 +124,23 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
     ) {
         let successfullyFinished = (error as NSError?)?
             .userInfo[AVErrorRecordingSuccessfullyFinishedKey] as? Bool ?? (error == nil)
-        guard successfullyFinished else {
-            finish(saved: false, error: error?.localizedDescription ?? "Enregistrement interrompu")
+        guard FileManager.default.fileExists(atPath: outputFileURL.path) else {
+            finish(saved: false, error: error?.localizedDescription ?? "Enregistrement interrompu", sourceURL: nil)
             return
         }
-        PHPhotoLibrary.shared().performChanges({
-            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: outputFileURL)
-        }) { [weak self] saved, error in
-            self?.finish(saved: saved, error: error?.localizedDescription)
+        // Même si AVFoundation signale une interruption, le conteneur fragmenté
+        // peut rester lisible. On tente donc l'import et on ne supprime jamais
+        // le fichier durable tant que Photos ne l'a pas confirmé.
+        saveToPhotos(outputFileURL) { [weak self] saved, photoError in
+            let reason = photoError ?? (!successfullyFinished ? error?.localizedDescription : nil)
+            self?.finish(saved: saved, error: reason, sourceURL: outputFileURL)
         }
     }
 
-    private func finish(saved: Bool, error: String?) {
+    private func finish(saved: Bool, error: String?, sourceURL: URL?) {
         sessionQueue.async {
             self.captureSession.stopRunning()
-            if let url = self.currentURL { try? FileManager.default.removeItem(at: url) }
+            if saved, let url = sourceURL { try? FileManager.default.removeItem(at: url) }
             self.currentURL = nil
             self.startedAt = nil
             let calls = self.stopCalls
@@ -135,6 +153,61 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
                 self.notifyListeners("recordingFinished", data: payload)
             }
         }
+    }
+
+    private func saveToPhotos(_ url: URL, completion: @escaping (Bool, String?) -> Void) {
+        PHPhotoLibrary.shared().performChanges({
+            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
+        }) { saved, error in
+            completion(saved, error?.localizedDescription)
+        }
+    }
+
+    /**
+     * Récupère les captures abandonnées par une extinction, un crash ou une
+     * ancienne version. Le dossier temporaire est aussi inspecté pour sauver
+     * les fichiers laissés par les builds précédentes.
+     */
+    private func recoverPendingRecordings() {
+        let manager = FileManager.default
+        let durable = (try? manager.contentsOfDirectory(
+            at: recordingsDirectory,
+            includingPropertiesForKeys: [.fileSizeKey],
+            options: [.skipsHiddenFiles]
+        )) ?? []
+        let temporary = ((try? manager.contentsOfDirectory(
+            at: manager.temporaryDirectory,
+            includingPropertiesForKeys: [.fileSizeKey],
+            options: [.skipsHiddenFiles]
+        )) ?? []).filter { $0.lastPathComponent.hasPrefix("prepatrack-") && $0.pathExtension == "mov" }
+        let pending = (durable + temporary).filter {
+            ((try? $0.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0) > 0
+        }
+        guard !pending.isEmpty else { return }
+
+        let importFiles = { [weak self] in
+            guard let self else { return }
+            for url in pending {
+                self.saveToPhotos(url) { saved, error in
+                    if saved { try? manager.removeItem(at: url) }
+                    DispatchQueue.main.async {
+                        var payload: [String: Any] = ["saved": saved, "recovered": true]
+                        if let error { payload["error"] = error }
+                        self.notifyListeners("recordingFinished", data: payload)
+                    }
+                }
+            }
+        }
+        let status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        if status == .authorized || status == .limited {
+            importFiles()
+        } else if status == .notDetermined {
+            PHPhotoLibrary.requestAuthorization(for: .addOnly) { next in
+                if next == .authorized || next == .limited { importFiles() }
+            }
+        }
+        // En cas de refus, les fichiers restent intacts pour une prochaine
+        // ouverture après réactivation de l'autorisation dans Réglages iOS.
     }
 
     private func configureIfNeeded() throws {
@@ -155,8 +228,28 @@ public final class RecordingPlugin: CAPPlugin, CAPBridgedPlugin, AVCaptureFileOu
         captureSession.addInput(cameraInput)
         captureSession.addInput(microphoneInput)
         captureSession.addOutput(movieOutput)
-        if let connection = movieOutput.connection(with: .video), connection.isVideoOrientationSupported {
-            connection.videoOrientation = .portrait
+        // 1× est le champ de vision natif maximal. Sur l'iPhone 15 Plus, la
+        // caméra TrueDepth avant est un capteur unique : un facteur inférieur
+        // à 1× n'existe pas et ne ferait qu'inventer des pixels.
+        do {
+            try camera.lockForConfiguration()
+            camera.videoZoomFactor = max(1, camera.minAvailableVideoZoomFactor)
+            if camera.isGeometricDistortionCorrectionSupported {
+                camera.isGeometricDistortionCorrectionEnabled = true
+            }
+            camera.unlockForConfiguration()
+        } catch {
+            // Le réglage par défaut reste utilisable si iOS réserve brièvement
+            // la caméra pendant une transition système.
+        }
+        if let connection = movieOutput.connection(with: .video) {
+            if connection.isVideoOrientationSupported { connection.videoOrientation = .portrait }
+            if connection.isVideoStabilizationSupported {
+                // `auto` laisse AVFoundation choisir le meilleur compromis
+                // stabilisation/champ de vision pour le format 720p réellement
+                // disponible sur cet appareil.
+                connection.preferredVideoStabilizationMode = .auto
+            }
         }
         configured = true
     }

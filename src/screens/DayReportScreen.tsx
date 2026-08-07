@@ -114,7 +114,7 @@ export function DayReportScreen({ workdayId, initialSegmentId, onBack }: Props) 
   const shortageQuantity = shortages.reduce((sum, shortage) => sum + shortage.quantity, 0)
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col">
+    <div className="mx-auto flex w-full min-w-0 max-w-5xl flex-1 flex-col overflow-x-hidden">
       <header className="sticky top-0 z-10 border-b border-ink-600 bg-ink-900/95 px-4 pb-3 pt-2 backdrop-blur">
         <button
           type="button"

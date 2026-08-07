@@ -488,6 +488,34 @@ describe('heures supplémentaires', () => {
 })
 
 describe('corrections a posteriori', () => {
+  it('termine précisément une vacation quand son dernier chrono était resté ouvert', async () => {
+    await startDay(at(0))
+    const active = (await loadSnapshot()).segments.find((s) => s.endedAt === undefined)!
+
+    await editSegmentBounds(active.id, { endedAt: at(15) }, at(60))
+
+    const day = await db.workdays.get(active.workdayId)
+    const fixed = await db.segments.get(active.id)
+    expect(fixed?.endedAt).toBe(at(15))
+    expect(day?.status).toBe('closed')
+    expect(day?.endedAt).toBe(at(15))
+  })
+
+  it('répercute la correction du dernier chrono sur la fin affichée de la journée', async () => {
+    await startDay(at(0))
+    await endBriefing(at(10))
+    await startCleanup(at(20))
+    await finishDay(at(60))
+    const workday = (await listWorkdays(1))[0]!
+    const report = await loadSnapshotById(workday.id)
+    const cleanup = report!.segments.find((s) => s.type === 'cleanup')!
+
+    await editSegmentBounds(cleanup.id, { endedAt: at(30) }, at(90))
+
+    const day = await db.workdays.get(cleanup.workdayId)
+    expect(day?.endedAt).toBe(at(30))
+  })
+
   it('recale le voisin quand on déplace une borne', async () => {
     await startDay(at(0))
     await endBriefing(at(10))
