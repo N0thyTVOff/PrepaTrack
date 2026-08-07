@@ -65,6 +65,14 @@ export async function clearDurableAuthSession(): Promise<void> {
   try { await plugin.clearSession() } catch { /* La déconnexion Supabase reste prioritaire. */ }
 }
 
+/** Recopie immédiatement la session courante après connexion ou renouvellement. */
+export async function persistDurableAuthSession(): Promise<void> {
+  if (!supported()) return
+  const authSession = window.localStorage.getItem('prepatrack-auth')
+  if (!authSession) return
+  try { await plugin.saveSession({ data: authSession }) } catch { /* Le miroir périodique réessaiera. */ }
+}
+
 /** Écrit immédiatement une photographie complète et validée hors de la WebView. */
 export async function flushDurableBackup(): Promise<DurableBackupStatus | undefined> {
   if (!supported()) return undefined
@@ -86,8 +94,7 @@ export async function flushDurableBackup(): Promise<DurableBackupStatus | undefi
         (row): row is { key: string; value: unknown } => row !== undefined,
       )
       const payload = { ...(await buildBackup()), nativeState: { meta } }
-      const authSession = window.localStorage.getItem('prepatrack-auth')
-      if (authSession) await plugin.saveSession({ data: authSession })
+      await persistDurableAuthSession()
       return await plugin.save({ data: JSON.stringify(payload) })
     } catch {
       return undefined

@@ -80,12 +80,21 @@ public final class DurableStoragePlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("Session native invalide")
             return
         }
+        guard (try? JSONSerialization.jsonObject(with: data)) != nil else {
+            call.reject("Session native illisible")
+            return
+        }
         let query = keychainQuery()
-        SecItemDelete(query as CFDictionary)
-        var item = query
-        item[kSecValueData as String] = data
-        item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        let status = SecItemAdd(item as CFDictionary, nil)
+        let values: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
+        ]
+        var status = SecItemUpdate(query as CFDictionary, values as CFDictionary)
+        if status == errSecItemNotFound {
+            var item = query
+            values.forEach { item[$0.key] = $0.value }
+            status = SecItemAdd(item as CFDictionary, nil)
+        }
         if status == errSecSuccess {
             call.resolve()
         } else {
